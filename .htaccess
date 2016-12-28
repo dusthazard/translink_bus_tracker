@@ -1,0 +1,13 @@
+Options -Indexes 
+
+RewriteEngine On
+
+#remove .php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+#disallow git,composer and vendor access
+RewriteRule ^.*\.git.* - [R=404]
+RewriteRule ^.*\.gitignore - [R=404]
+RewriteRule ^composer\.(lock|json)$ - [R=404]
+RewriteRule ^vendor/.*$ - [R=404]
