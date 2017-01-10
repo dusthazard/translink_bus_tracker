@@ -24,10 +24,12 @@ composer update
 
 Update the **auth_example.php** file with your Translink API information, and rename the file to **auth.php**
 
+```
+define('API_KEY','YOUR_API_KEY');
+```
+
 Done!
 
 ## Configuration
 
 ## Usage
-
-## Animation Types
