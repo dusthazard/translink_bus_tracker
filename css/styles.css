@@ -1,0 +1,168 @@
+/* Translink tracker stylesheet */
+
+.content {
+  padding: 12px 12px 0;
+}
+
+.push {
+  margin: 0 0 1.5em;
+}
+
+body {
+  overflow: hidden; 
+  width: 100%; 
+  height: 100%;
+}
+
+#map_container {
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  z-index: 0;
+}
+
+#map {width: 100%; height: 100%;}
+
+#menu {
+  width: 20%;
+  max-width: 400px;
+  background-color: #fff;
+  position: absolute;
+  right: -20%;
+  top: 0;
+  bottom: 0;
+  z-index: 99;
+  box-shadow: 0 0 12px rgba(0,0,0,0.25);
+  margin-right: 6px;
+  transition: right 0.4s ease;
+}
+
+#menu.open {
+  right: 0px;
+  margin: 0;
+}
+
+.menu_content {
+  width: 100%;
+  height: 100%;
+  background-color: white;
+}
+
+.menu_item {
+  margin: 0;
+  padding: 18px 30px;
+}
+
+.menu_item:hover,
+.menu_item.active {
+  background-color: #f8f8f8;
+}
+
+.menu_item_title {
+  font-size: 18px;
+  font-weight: 400px;
+  color: #333;
+  cursor: pointer;
+}
+
+.menu_item_content {
+  display: none;
+  transition: opacity 0.4s ease;
+  opacity: 0;
+  position:relative;
+}
+
+.menu_item.active .menu_item_content {
+  display: block;
+  opacity: 1;
+}
+
+#controls {
+  background-color: #fff;
+  border-radius: 3px 0 0 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: #333;
+  cursor: pointer;
+  font-size: 1vw;
+  left: -48px;
+  padding: 14px 18px;
+  position: absolute;
+  top: 8px;
+  width: 48px;
+  z-index: -1;
+}
+
+#directions-icon {
+  color: rgba(0,0,0,0.4);
+  position: absolute;
+  left: -14px;
+  width: 18px;
+  text-align: center;
+  top: 21px;
+}
+
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+.pac-container {
+  font-family: Roboto;
+}
+
+#type-selector {
+  color: #fff;
+  background-color: #4d90fe;
+  padding: 5px 11px 0px 11px;
+}
+
+#type-selector label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300;
+}
+#target {
+  width: 345px;
+}
+
+
+.markerLabel {
+  color: white; 
+  text-align: center; 
+  vertical-align: middle; 
+  font-size: 13px; 
+  width: 50px; 
+  height: 50px;
+  white-space: nowrap;
+  border-radius: 50%;
+  box-shadow: none;
+  padding: 16px 0 0;
+}
+
+.markerEAST {background: url(http://www.ericsestimate.com/playground/translink/img/EB.png) center center no-repeat; padding-right: 7px;}
+.markerWEST {background: url(http://www.ericsestimate.com/playground/translink/img/WB.png) center center no-repeat; padding-left: 9px;}
+.markerNORTH {background: url(http://www.ericsestimate.com/playground/translink/img/NB.png) center center no-repeat; padding-top: 19px;}
+.markerSOUTH {background: url(http://www.ericsestimate.com/playground/translink/img/SB.png) center center no-repeat; padding-top: 12px;}
