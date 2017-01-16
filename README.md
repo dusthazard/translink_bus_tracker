@@ -1,6 +1,6 @@
 # Translink Bus Tracker
 
-**Description:** EE Animate is a super light animation plugin written in 'vanilla' Javascript.
+**Description:** Connects to the Translink API to search and pull in bus data based on a user's search.
 
 ## Live Examples
 
