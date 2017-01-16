@@ -1,9 +1,17 @@
+<?php
+
+// PRIMARY MAP PAGE
+
+require_once('auth.php');
+
+?>
+
 <!doctype html>
 
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
   <title>Translink Bus Tracker</title>
   <meta name="description" content="Translink Bus Tracker">
@@ -31,6 +39,9 @@
     </div>
     
     <div class='menu_content'>
+    
+        <h3 class='text-center'>Vancouver Bus Tracker</h3>
+        <p id='status' class='text-center'>Search for a bus route or directions below</p>
   
         <div class='menu_section'>
         
@@ -39,10 +50,10 @@
             <div class='menu_item_title'>Search By Bus Route</div>
             
             <div class='menu_item_content content'>
-              <form id='bus-route'>
+              <form id='bus-route' class='push'>
                 <div class='input-group'>
-                  <input name='route' class='form-control' type='text' placeholder='Search for a bus route (ex: 99)'>
-                  <span class='input-group-btn'><button class='btn btn-info' type='submit'>+</button></span>
+                  <input name='route' class='form-control' type='text' placeholder='Search for a bus route (ex: 99)' required>
+                  <span class='input-group-btn'><button class='btn btn-info' type='submit'><i class='fa fa-plus'></i></button></span>
                 </div>
               </form>
               <div id='route_filter'></div>
@@ -61,8 +72,8 @@
                   <i class='fa fa-angle-down'></i>
                   <i class='fa fa-bullseye'></i>
                 </div>
-                <p><input id="from-input" class="form-control" type="text" placeholder="Starting Point"></p>
-                <p class='push'><input id="to-input" class="form-control" type="text" placeholder="Destination"></p>
+                <p><input id="from-input" class="form-control" type="text" placeholder="Starting Point" required></p>
+                <p class='push'><input id="to-input" class="form-control" type="text" placeholder="Destination" required></p>
                 <p class='text-right'>
                   <button type='submit' class='btn btn-info'><span class='fa fa-search'></span> Search</button>
                 </p>
@@ -70,19 +81,16 @@
             </div>
           
           </div>
+        
+        </div>
+        
+        <div class='text-center'><span id='last_update'></span></div>
+        
+        <div id='footer'>
           
-          <div class='menu_item'>
+          <div class='footer_item'>
           
-            <div class='menu_item_title'>Find Bus Stops</div>
-            
-            <div class='menu_item_content content'>
-              <form id='bus-route'>
-                <div class='input-group'>
-                  <input name='route' class='form-control' type='text' placeholder='Search for an address'>
-                  <span class='input-group-btn'><button class='btn btn-secondary' type='submit'><i class='fa fa-search'></i></button></span>
-                </div>
-              </form>
-            </div>
+            Made with <i class='fa fa-beer text-warning'></i> by <a href='https://www.twitter.com/ericsestimate' target='_blank'>@ericsestimate</a>
           
           </div>
         
@@ -104,7 +112,6 @@
   
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDn6E0pyDN51LUVc7nED0t92WqfEYRI_ys&libraries=places"></script>
   <script type="text/javascript" src="js/richmarker.js"></script>
-  <script type="text/javascript" src="js/functions.js"></script>
 
   <script>
   
@@ -115,20 +122,30 @@
       lines,
       timer = false,
       directionsDisplay,
-      directionsService;
+      directionsService,
+      heartbeat = false;
+      
+      
+  /**
+   * @desc - refresh the data from the API
+   */
+      
   
   function refreshData() {
   
-    if(routes) {
+    if(routes && routes.routes.length > 0) {
   
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'http://www.ericsestimate.com/playground/translink/api/get');
+      xhr.open('POST', '<?= API_URL; ?>');
       xhr.onload = function() {
           if (xhr.status === 200) {
               
               data = JSON.parse(xhr.responseText);
               
-              updateMarkers(data);
+              updateMarkers(data.data);
+              updateTimestamp(data.timestamp);
+              
+              document.querySelector('#bus-route button i').classList.remove('fa-spin');
               
           }
           else {
@@ -137,13 +154,55 @@
       };
       xhr.send(JSON.stringify(routes));
       
+    } else {
+    
+      // remove all the markers, there is no data
+      
+      removeAllMarkers();
+    
+    }    
+  
+  }
+  
+  
+  /**
+   * @desc - updates the latest timestamp from the data refresh
+   */
+   
+ 
+  function updateTimestamp(timestamp) {
+  
+    if(heartbeat) {
+      
+      clearInterval(heartbeat);
+      heartbeat = false;
+    
     }
   
+    heartbeat = setInterval(function() {
+    
+      var seconds = Math.floor((new Date().getTime() / 1000) - timestamp);
+      document.querySelector('#last_update').innerHTML = "Updated " + seconds + " seconds ago";
+      
+    },1000);
+  
   }
   
-  function easeInCubic(t) {
-      return Math.pow(t,3);
+  
+  /**
+   * @desc - calculate a quartratic curve for the animation
+   */
+  
+  
+  function animate(t) {
+      return 1-Math.pow((1-t),4);
   }
+  
+  
+  /**
+   * @desc - render the animation when a marker moves
+   */
+  
   
   function moveMarker(marker,time,speed,latlng,start) {
   
@@ -151,7 +210,7 @@
     
       // return a cubic timestamp
     
-      var t = easeInCubic(time/speed);
+      var t = animate(time/speed);
       
       // get the starting position of the marker
   
@@ -197,7 +256,50 @@
   
   }
   
+  
+  /**
+   * @desc - Update the position of the markers
+   */
+  
+  
   function updateMarkers(data) {
+  
+    // find any removed markers
+    
+    if(data.length !== markers.length) {
+    
+      // loop through existing markers
+      
+      for(var i in markers) {
+      
+        // find out if the route exists in the new data
+      
+        var exists = false;
+      
+        for(j=0;j<data.length;j++) {
+        
+          if(data[j].RouteNo == i)
+            exists = true;
+        
+        }
+        
+        // if it doesn't exist, remove the markers
+        
+        if(!exists) {
+        
+          for(var j in markers[i]) {
+          
+            markers[i][j].setMap(null);
+          
+          }
+        
+        }
+      
+      }
+      
+    }
+    
+    // create the markers
   
     for(i=0;i<data.length;i++) {
     
@@ -244,6 +346,13 @@
     }
   
   }
+  
+  
+  /**
+   * @desc - calculate and display a route on the map
+   * @param directionService - Google maps api direction service
+   */
+  
   
   function calculateAndDisplayRoute(directionsService, directionsDisplay) {
   
@@ -299,7 +408,7 @@
           refreshData();
           
           if(!timer)
-            timer = setInterval(refreshData,5000);
+            timer = setInterval(refreshData,8000);
         
         }
         
@@ -308,6 +417,12 @@
       }
     });
   }
+  
+  
+  /**
+   * @desc - clear all of the direction lines from the map
+   */
+  
   
   function clearAllLines() {
   
@@ -325,13 +440,23 @@
   
   }
   
+  
+  /**
+   * @desc - remove all of the markers from the map
+   */
+   
+  
   function removeAllMarkers() {
   
     // remove all of the markers from the map
   
     for(var i in markers) {
     
+      // loop through route numbers
+    
       for(var j in markers[i]) {
+      
+        // loop through the markers
       
         markers[i][j].setMap(null);
       
@@ -345,6 +470,10 @@
   
   }
   
+  /**
+   * @desc init function to setup the map
+   */
+  
   function init() {
   
     directionsService = new google.maps.DirectionsService;
@@ -354,7 +483,8 @@
       document.getElementById("map"), 
       {
         center: new google.maps.LatLng(49.2827, -123.1207),
-        zoom: 12
+        zoom: 12,
+        gestureHandling: 'greedy'
       }
     );
     
@@ -370,6 +500,7 @@
       searchBox[0].setBounds(map.getBounds());
       searchBox[1].setBounds(map.getBounds());
     });
+    
     
     
     // directions search form functionality
@@ -389,7 +520,9 @@
     });
 
 
+
     // Try HTML5 geolocation.
+    
     
     
     if (navigator.geolocation) {
@@ -417,12 +550,56 @@
     
   }
   
+  
+  
+  /*
+   * @desc Function to check if a route exists in the current data
+   * @param new_route string - route to check
+   * @return bool
+   */
+   
+   
+  
+  function route_exists(new_route) {
+  
+    if(routes && routes.routes) {
+    
+      for(i=0;i<routes.routes.length;i++) {
+      
+        if(routes.routes[i] == new_route)
+          return true;
+      
+      }
+    
+    }
+    
+    return false;
+  
+  }
+  
+  
+  // load the init function
+  
+  
   google.maps.event.addDomListener(window, 'load', init);
+  
+  
+  /*
+   * Function to setup all of the event listeners for the UI
+   */
+  
   
   (function() {
   
   
-    // menu item accordian functionality
+  
+    /*
+     * Add Event Listeners
+     * @desc menu item accordian functionality
+     * @element array .menu_item_title
+     * @event click
+     */
+    
     
   
     var menu_items = document.querySelectorAll('.menu_item_title');
@@ -450,7 +627,14 @@
     }
     
     
-    // controls button functionality
+    
+    /**
+     * Event Listener
+     * @desc controls button functionality
+     * @element #controls
+     * @event click
+     */
+    
     
     
     document.querySelector('#controls').addEventListener('click',function() {
@@ -460,7 +644,14 @@
     });
     
     
-    // bus route filter form functionality
+    
+    /**
+     * Event Listener
+     * @desc bus route filter form functionality
+     * @element #bus-route
+     * @event submit
+     */
+    
     
     
     document.querySelector('#bus-route').addEventListener('submit',function(e) {
@@ -468,6 +659,8 @@
       e.preventDefault();
       
       var new_route = this.elements[0].value;
+      
+      document.querySelector('#bus-route button i').classList.add('fa-spin');
       
       // make sure that the route is at least 3 digits
       
@@ -477,7 +670,38 @@
       
       }
       
-      document.querySelector('#route_filter').innerHTML = document.querySelector('#route_filter').innerHTML + "<div class='route_filter' data='"+new_route+"'>" + new_route + " <i class='fa fa-close'></i></div>";
+      // check if the route already exists
+      
+      if(route_exists(new_route)) return;
+      
+      // create the GUI button
+      
+      var new_filter = document.createElement('div');
+             
+      new_filter.setAttribute('class','route_filter');
+      new_filter.setAttribute('data',new_route);
+      new_filter.innerHTML = new_route + " <i class='fa fa-close'></i>";
+      
+      document.querySelector('#route_filter').appendChild(new_filter);
+      
+      // add an event listener to the new element
+      
+      new_filter.addEventListener('click',function() {
+      
+        var this_route = this.getAttribute('data');
+      
+        this.parentNode.removeChild(this);
+        
+        for(i=0;i<routes.routes.length;i++) {
+        
+          if(routes.routes[i] == this_route)
+            routes.routes.splice(i,1);
+        
+        }
+        
+        refreshData();
+      
+      });
       
       // reset the routes if need be
       
@@ -501,7 +725,7 @@
       refreshData();
       
       if(!timer)
-        timer = setInterval(refreshData,5000);
+        timer = setInterval(refreshData,8000);
       
       return false;
     

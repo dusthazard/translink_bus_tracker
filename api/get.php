@@ -7,10 +7,8 @@ if(!$data = json_decode(file_get_contents('php://input'), true)) {
   die();
 }
 
-
-
 $origin=isset($_SERVER['HTTP_ORIGIN'])?$_SERVER['HTTP_ORIGIN']:$_SERVER['HTTP_HOST'];
-header('Access-Control-Allow-Origin: '.$origin);	
+header('Access-Control-Allow-Origin: '.HOST_NAME);	
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, *");
@@ -31,11 +29,14 @@ $result = [];
 
 foreach($data['routes'] as $route) {
   
-  if(isset($current_conditions[$route]))
-    $result = array_merge($result,$current_conditions[$route]);
+  if(isset($current_conditions['data'][$route]))
+    $result = array_merge($result,$current_conditions['data'][$route]);
 
 }
 
 // return the result
 
-echo json_encode($result);
+echo json_encode(array(
+  'timestamp' => $current_conditions['timestamp'],
+  'data' => $result
+));

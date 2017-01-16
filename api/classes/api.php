@@ -45,17 +45,20 @@ class api {
         
           // save the new data to file
         
-          $this->saveData(json_decode($refresh,true));
+          $timestamp = $this->saveData(json_decode($refresh,true));
           
           // return the data as an array
         
-          return json_decode($refresh,true);
+          return array(
+            'timestamp' => $timestamp,
+            'data'      => json_decode($refresh,true)
+          );
         
         } else {
         
           // couldn't get data from the API - return cached data
         
-          return $data['data'];
+          return $data;
         
         }
       
@@ -63,7 +66,7 @@ class api {
       
         // if the data is fresh, return it
       
-        return $data['data'];
+        return $data;
       
       }
       
@@ -109,10 +112,12 @@ class api {
 
   private function saveData($data) {
   
+    $timestamp = time();
+  
     // add the timestamp to the data
   
     $contents = json_encode([
-      'timestamp' => time(),
+      'timestamp' => $timestamp,
       'data' => $data
     ]);
     
@@ -125,7 +130,7 @@ class api {
     fwrite($file,$contents);
     fclose($file);
     
-    return true;
+    return $timestamp;
   
   }
   
